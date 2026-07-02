@@ -22,4 +22,5 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('template/', include('template.urls')),
     path('problems/', include('problems.urls')),
+    path('progress/', include('progress.urls')),
 ]

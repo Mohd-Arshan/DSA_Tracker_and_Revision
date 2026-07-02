@@ -4,6 +4,7 @@ from template.models import Template
 from .validators import ProblemSerializer
 from .utils import get_leetcode_question_info
 from .service import get_problem_by_leetcode_number, save_problem
+from progress.models import UserTemplateProblemProgress
 
 
 class AddProblemIntoTemplateSerializer(serializers.ModelSerializer):
@@ -24,6 +25,15 @@ class AddProblemIntoTemplateSerializer(serializers.ModelSerializer):
         template_problem, created = TemplateProblems.objects.get_or_create(template=template, problem=problem)
         if not created:
             raise serializers.ValidationError("This problem is already added to the template.")
+        
+        try:
+            UserTemplateProblemProgress.objects.create(
+            user=user,
+            templateProblem=template_problem)
+        except Exception as e:
+            template_problem.delete()  # Rollback the creation of TemplateProblems if UserTemplateProblemProgress creation fails
+            raise serializers.ValidationError(f"Failed to create UserTemplateProblemProgress: {str(e)}")   
+             
         return template_problem
         
         

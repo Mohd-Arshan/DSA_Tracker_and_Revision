@@ -11,6 +11,7 @@ from .validators import ProblemSerializer
 # Create your views here.
 
 
+#ADD
 class AddProblemIntoTemplateView(CreateAPIView):
     serializer_class = AddProblemIntoTemplateSerializer
     permission_classes = [IsAuthenticated]
@@ -33,8 +34,10 @@ class AddProblemIntoTemplateView(CreateAPIView):
             "template_problem_id": template_problem.id,
             "problem_id": template_problem.problem.leetcode_number    
         }, status=status.HTTP_201_CREATED)
-        
-        
+ 
+
+       
+#READ       
 class ListProblemsInTemplateView(RetrieveAPIView):
     serializer_class = GetAllProblemsInTemplateSerializer
     permission_classes = [IsAuthenticated]
@@ -47,3 +50,35 @@ class ListProblemsInTemplateView(RetrieveAPIView):
         serializer = self.get_serializer(template)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+
+#DELETE    
+class RemoveProblemFromTemplateView(APIView):
+   permission_classes = [IsAuthenticated]
+   method  = 'delete'
+   
+   def delete(self,request,template_id,leetcode_id):
+       user = request.user
+       
+       if not Template.objects.filter(id = template_id).exists():
+           return Response({"error":"Template does not exits."},status=status.HTTP_400_BAD_REQUEST)
+       
+       template_user = Template.objects.get(id = template_id).createdBy
+       
+       if template_user != user:
+           return Response({"error":"You dont have permission."},status=status.HTTP_403_FORBIDDEN)
+       
+       if not Problem.objects.filter(leetcode_number = leetcode_id).exists():
+           return Response({"error":"Problem does not exits."},status=status.HTTP_400_BAD_REQUEST)
+       
+       problem = Problem.objects.get(leetcode_number = leetcode_id)
+       
+       if not TemplateProblems.objects.filter(template = template_id, problem = problem).exists():
+           return Response({"error":"Problem does not exits in template."},status=status.HTTP_400_BAD_REQUEST)
+       
+       template_problem = TemplateProblems.objects.get(template = template_id,problem = problem)
+       template_problem.delete()
+       
+       return Response({"success":"problem removed successfully."},status=status.HTTP_204_NO_CONTENT)
+           
+     
+       
